@@ -1,5 +1,6 @@
 #![no_std]
 #![no_main]
+#![feature(abi_x86_interrupt)]
 
 // use core::f32::INFINITY;
 use bootloader_api::/*{info::FrameBuffer,*/BootInfo/*}*/;
@@ -10,6 +11,8 @@ use bootloader_api::/*{info::FrameBuffer,*/BootInfo/*}*/;
 // mod framebuffer;
 // mod graphics;
 mod serial;
+mod interrupts;
+mod gdt;
 
 /*
 fn delay(ms: u32) {
@@ -105,12 +108,14 @@ fn kernel_main(_boot_info: &'static mut BootInfo) -> ! {
     }
     */
 
-    
+    gdt::init();
+    interrupts::init();
 
     loop {}
 }
 
 #[panic_handler]
-fn panic(_info: &core::panic::PanicInfo) -> ! {
+fn panic(info: &core::panic::PanicInfo) -> ! {
+    println!("{}", info);
     loop {}
 }
