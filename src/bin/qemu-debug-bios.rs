@@ -8,7 +8,9 @@ fn main() {
     let args = vec![
         "-drive", image.as_str(),
         "-display", "sdl",
-        "-serial", "stdio"
+        "-serial", "stdio",
+        "-s", 
+        "-S"
     ];
 
     let mut qemu = Command::new("qemu-system-x86_64");

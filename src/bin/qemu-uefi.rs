@@ -4,12 +4,22 @@ use std::{
 };
 
 fn main() {
+    let image = format!("format=raw,file={}", env!("UEFI_IMAGE"));
+    let bios = ovmf_prebuilt::ovmf_pure_efi().display().to_string();
+    let args = vec![
+        "-drive", image.as_str(),
+        "-display", "sdl",
+        "-m", "1G",
+        "-serial", "stdio",
+        "-bios", bios.as_str()
+    ];
+
     let mut qemu = Command::new("qemu-system-x86_64");
-    qemu.arg("-m");
-    qemu.arg("1G");
-    qemu.arg("-drive");
-    qemu.arg(format!("format=raw,file={}", env!("UEFI_IMAGE")));
-    qemu.arg("-bios").arg(ovmf_prebuilt::ovmf_pure_efi());
+
+    for arg in args {
+        qemu.arg(arg);
+    }
+
     let exit_status = qemu.status().unwrap();
     process::exit(exit_status.code().unwrap_or(-1));
 }

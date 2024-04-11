@@ -1,0 +1,27 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "QEMU (UEFI)",
+            "type": "cppdbg",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "externalConsole": true,
+            "miDebuggerServerAddress": "localhost:1234",
+            "program": "${workspaceFolder}/target/x86_64-unknown-none/debug/deps/artifact/kernel-784936300a4f9d9a/bin/kernel-784936300a4f9d9a",
+            "preLaunchTask": "Launch QEMU UEFI",
+            "postDebugTask": "Close QEMU"
+        },
+        {
+            "name": "QEMU (BIOS)",
+            "type": "cppdbg",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "externalConsole": true,
+            "miDebuggerServerAddress": "localhost:1234",
+            "program": "${workspaceFolder}/target/x86_64-unknown-none/debug/deps/artifact/kernel-784936300a4f9d9a/bin/kernel-784936300a4f9d9a",
+            "preLaunchTask": "Launch QEMU BIOS",
+            "postDebugTask": "Close QEMU"
+        },
+    ]
+}
