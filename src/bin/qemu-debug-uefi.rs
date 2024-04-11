@@ -4,11 +4,16 @@ use std::{
 };
 
 fn main() {
-    let image = format!("format=raw,file={}", env!("BIOS_IMAGE"));
+    let image = format!("format=raw,file={}", env!("UEFI_IMAGE"));
+    let bios = ovmf_prebuilt::ovmf_pure_efi().display().to_string();
     let args = vec![
         "-drive", image.as_str(),
         "-display", "sdl",
-        "-serial", "stdio"
+        "-m", "1G",
+        "-serial", "stdio",
+        "-bios", bios.as_str(),
+        "-s",
+        "-S"
     ];
 
     let mut qemu = Command::new("qemu-system-x86_64");

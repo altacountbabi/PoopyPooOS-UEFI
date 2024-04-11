@@ -1,0 +1,51 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "cargo b && cargo b -r && cargo r --bin poopypooos",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/"
+            }
+        },
+        {
+            "label": "Launch QEMU UEFI",
+            "type": "shell",
+            "linux": {
+                "command": "tmux kill-session -t osdev; tmux new -d -s osdev; tmux send-keys \"cargo r --bin qemu-debug-uefi\" C-m"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/"
+            },
+            // "dependsOn": ["build"],
+            // "dependsOrder": "sequence"
+        },
+        {
+            "label": "Launch QEMU BIOS",
+            "type": "shell",
+            "linux": {
+                "command": "tmux kill-session -t osdev; tmux new -d -s osdev; tmux send-keys \"cargo r --bin qemu-debug-bios\" C-m"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/"
+            },
+            // "dependsOn": ["build"],
+            // "dependsOrder": "sequence"
+        },
+        {
+            "label": "Close QEMU",
+            "type": "shell",
+            "linux": {
+                "command": "tmux kill-session -t osdev"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/"
+            }
+        }
+    ]
+}
