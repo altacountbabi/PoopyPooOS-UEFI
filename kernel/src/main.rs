@@ -2,17 +2,15 @@
 #![no_main]
 #![feature(abi_x86_interrupt)]
 
-// use core::f32::INFINITY;
-use bootloader_api::/*{info::FrameBuffer,*/BootInfo/*}*/;
-// use embedded_graphics::{geometry::Point, pixelcolor::Rgb888, Pixel};
-// use framebuffer::{Color, Display, Position};
-// use graphics::Graphics;
+use bootloader_api::{config::Mapping, BootInfo, BootloaderConfig};
+use x86_64::structures::paging::Translate;
 
-// mod framebuffer;
-// mod graphics;
+use crate::memory::BootInfoFrameAllocator;
+
 mod serial;
 mod interrupts;
 mod gdt;
+mod memory;
 
 /*
 fn delay(ms: u32) {
@@ -49,73 +47,84 @@ fn draw_rectangle(mut framebuffer: &mut FrameBuffer, position: framebuffer::Posi
         }
     }
 }
-
-fn clear(mut framebuffer: &mut FrameBuffer, color: Color) {
-    let info = framebuffer.info();
-    
-    let byte_offset = {
-        let line_offset = position.y * info.stride;
-        let pixel_offset = line_offset + position.x;
-        pixel_offset * info.bytes_per_pixel
-    };
-    
-    let pixel_buffer = &mut framebuffer.buffer_mut()[byte_offset..];
-    match info.pixel_format {
-        PixelFormat::Rgb => {
-            pixel_buffer[0] = color.red;
-            pixel_buffer[1] = color.green;
-            pixel_buffer[2] = color.blue;
-        },
-        PixelFormat::Bgr => {
-            pixel_buffer[0] = color.blue;
-            pixel_buffer[1] = color.green;
-            pixel_buffer[2] = color.red;
-        }
-        PixelFormat::U8 => {
-            let gray = color.red / 3 + color.green / 3 + color.blue / 3;
-            
-            pixel_buffer[0] = gray;
-        }
-        other => panic!("unkown pixel format {other:?}")
-    }
-} 
 */
 
-bootloader_api::entry_point!(kernel_main);
-fn kernel_main(_boot_info: &'static mut BootInfo) -> ! {
-    /*
-    let framebuffer = boot_info.framebuffer.as_mut().unwrap();
-    let fb_info = framebuffer.info();
-    let display = Display::new(framebuffer);
-    let mut graphics = Graphics::new(display);
-
-    // let time = rtc::read_rtc_time();
-    // println!(time.0);
-
-
-    loop {
-        for i in 0..256 as u32 {
-            draw_rectangle(framebuffer, framebuffer::Position { x: 0, y: 0 }, fb_info.width, fb_info.height, Color { red: i as u8, green: 0, blue: 0 });
-        }
-
-        for i in 0..256 as u32 {
-            draw_rectangle(framebuffer, framebuffer::Position { x: 0, y: 0 }, fb_info.width, fb_info.height, Color { red: 0, green: i as u8, blue: 0 });
-        }
-
-        for i in 0..256 as u32 {
-            draw_rectangle(framebuffer, framebuffer::Position { x: 0, y: 0 }, fb_info.width, fb_info.height, Color { red: 0, green: 0, blue: i as u8 });
-        }
-    }
-    */
-
+fn kernel_init() {
     gdt::init();
     interrupts::init();
+    unsafe { interrupts::PICS.lock().initialize() };
+    x86_64::instructions::interrupts::enable();
+}
 
-    loop {}
+fn hlt_loop() -> ! {
+    loop {
+        x86_64::instructions::hlt();
+    }
+}
+
+pub static BOOTLOADER_CONFIG: BootloaderConfig = {
+    let mut config = BootloaderConfig::new_default();
+    config.mappings.physical_memory = Some(Mapping::Dynamic);
+    config
+};
+
+
+bootloader_api::entry_point!(kernel_main, config = &BOOTLOADER_CONFIG);
+#[allow(unconditional_panic)]
+#[allow(unused_assignments)]
+fn kernel_main(boot_info: &'static mut BootInfo) -> ! {    
+    // let frame_buffer_optional = &mut boot_info.framebuffer;
+    // let frame_buffer_option = frame_buffer_optional.as_mut();
+    // let frame_buffer_struct = frame_buffer_option.unwrap();
+    // let frame_buffer_info = frame_buffer_struct.info().clone();
+    // let raw_frame_buffer = frame_buffer_struct.buffer_mut();
+
+    println!("Clearing framebuffer...");
+
+    // raw_frame_buffer.fill(0);
+
+    kernel_init();
+
+    let (ramdisk_len, ramdisk_addr) = (boot_info.ramdisk_len, boot_info.ramdisk_addr);
+
+    unsafe {
+        let ramdisk_ptr: *const u8 = ramdisk_addr.into_option().unwrap() as *const u8;
+        let ramdisk_slice = core::slice::from_raw_parts(ramdisk_ptr, ramdisk_len.try_into().unwrap());
+
+        for &byte in ramdisk_slice {
+            print!("{}", char::from_u32(byte as u32).unwrap());
+        }
+    }
+
+    println!("");
+
+    use x86_64::VirtAddr;
+    let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset.into_option().unwrap());
+    let mapper = unsafe { memory::init(phys_mem_offset) };
+    let _frame_allocator = unsafe {
+        BootInfoFrameAllocator::init(&boot_info.memory_regions)
+    };
+    println!("Phyisical memory offset: 0x{:x}", phys_mem_offset.as_u64());
+
+    {
+        let addresses = [
+            0x8000000000,
+            0x29000,
+            0x2a000,
+        ];
+        
+        for &address in &addresses {
+            let virt = VirtAddr::new(address);
+            let phys = mapper.translate_addr(virt);
+            println!("{:?} -> {:?}", virt, phys);
+        }
+    }
+
+    hlt_loop();
 }
 
 #[panic_handler]
 fn panic(info: &core::panic::PanicInfo) -> ! {
-    println!("{}", info);
-    loop {}
+    log::error!("{}", info);
+    hlt_loop();
 }
