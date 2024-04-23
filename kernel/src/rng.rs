@@ -1,5 +1,3 @@
-use crate::rtc;
-
 struct Xoshiro256 {
     state: [u64; 4],
 }
@@ -38,10 +36,10 @@ pub fn rand(min: u64, max: u64) -> Option<u64> {
         return None;
     }
 
-    let seed = {
+    let seed = 42; /* {
         let time = rtc::read_rtc_time();
         (time.0 + time.1 - time.2) as u64
-    };
+    }; */
 
     let mut a = Xoshiro256::new(seed);
 

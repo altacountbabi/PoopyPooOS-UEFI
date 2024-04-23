@@ -14,9 +14,11 @@ embedded-graphics = "0.8.1"
 log = { version = "0.4.17", default-features = false }
 bootloader-x86_64-common = "0.11.3"
 conquer-once = { version = "0.4.0", default-features = false }
-x86_64 = "0.15.1"
+x86_64 = "0.14.2"
 spin = "0.9.8"
 uart_16550 = "0.3.0"
+pic8259 = "0.10.1"
+uefi = { version = "0.27.0", features = ["alloc", "global_allocator", "logger"] }
 
 [dependencies.lazy_static]
 version = "1.0"

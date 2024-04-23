@@ -5,7 +5,7 @@ use bootloader_api::info::{FrameBuffer, FrameBufferInfo, PixelFormat};
 
 pub struct Display<'f> {
     framebuffer: &'f mut FrameBuffer,
-    info: FrameBufferInfo, // Store framebuffer info for reuse
+    info: FrameBufferInfo,
 }
 
 impl<'f> Display<'f> {
