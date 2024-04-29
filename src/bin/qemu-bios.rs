@@ -8,6 +8,7 @@ fn main() {
     let args = vec![
         "-drive", image.as_str(),
         "-display", "sdl",
+        "-m", "1G",
         "-serial", "stdio"
     ];
 
