@@ -76,7 +76,7 @@ fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
     let ramdisk = read_ramdisk(ramdisk_addr, ramdisk_len);
 
     let mut fb = Framebuffer::new(boot_info.framebuffer.as_mut().unwrap());
-    render_png(&mut fb, decode_png(ramdisk), Position::new(0, 0));
+    render_png(&mut fb, decode_png(ramdisk), Position::new(50, 50));
 
     let mut executor = Executor::new();
     executor.spawn(Task::new(example_task()));
