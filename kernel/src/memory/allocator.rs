@@ -1,38 +1,43 @@
+use crate::config;
+use linked_list_allocator::LockedHeap;
 use x86_64::{
-    structures::paging::{FrameAllocator, Mapper, Page, PageSize, PageTableFlags, PhysFrame, Size4KiB},
+    structures::paging::{
+        FrameAllocator, Mapper, Page, PageSize, PageTableFlags, PhysFrame, Size4KiB,
+    },
     VirtAddr,
 };
-use linked_list_allocator::LockedHeap;
-use crate::config;
 
 #[global_allocator]
 static ALLOCATOR: LockedHeap = LockedHeap::empty();
 
-pub fn init_heap(mapper: &mut impl Mapper<Size4KiB>, frame_allocator: &mut impl FrameAllocator<Size4KiB>) -> Result<(), &'static str> {
+pub fn init_heap(
+    mapper: &mut impl Mapper<Size4KiB>,
+    frame_allocator: &mut impl FrameAllocator<Size4KiB>,
+) -> Result<(), &'static str> {
     let page_flags = PageTableFlags::PRESENT | PageTableFlags::WRITABLE;
 
     let heap_start = VirtAddr::new(config::HEAP_START as u64);
     let heap_end = heap_start + config::HEAP_SIZE as u64;
 
-    // Define the batch size (number of pages to map in each batch)
-    const BATCH_SIZE: usize = 32; // Adjust as needed
+    const BATCH_SIZE: usize = 32;
 
-    // Pre-allocate arrays for holding batch pages and frames
     let mut batch_pages: [Option<Page<Size4KiB>>; BATCH_SIZE] = Default::default();
     let mut batch_frames: [Option<PhysFrame>; BATCH_SIZE] = Default::default();
 
-    // Iterate over the pages and map them in batches
-    // let mut current_batch_index = 0;
-    for page_addr in (heap_start..=heap_end).step_by(Size4KiB::SIZE as usize * BATCH_SIZE as usize) {
+    for page_addr in (heap_start..=heap_end).step_by(Size4KiB::SIZE as usize * BATCH_SIZE as usize)
+    {
         let batch_end_addr = page_addr + Size4KiB::SIZE as usize * (BATCH_SIZE as usize - 1);
         let batch_end = heap_end.min(batch_end_addr);
 
-        // Populate the batch pages array
-        for (i, page) in Page::range_inclusive(Page::containing_address(page_addr), Page::containing_address(batch_end)).enumerate() {
+        for (i, page) in Page::range_inclusive(
+            Page::containing_address(page_addr),
+            Page::containing_address(batch_end),
+        )
+        .enumerate()
+        {
             batch_pages[i] = Some(page);
         }
 
-        // Allocate frames for the entire batch
         for i in 0..BATCH_SIZE {
             if let Some(frame) = frame_allocator.allocate_frame() {
                 batch_frames[i] = Some(frame);
@@ -41,7 +46,6 @@ pub fn init_heap(mapper: &mut impl Mapper<Size4KiB>, frame_allocator: &mut impl 
             }
         }
 
-        // Map the pages in the batch to their respective frames
         for (page_opt, frame_opt) in batch_pages.iter().zip(batch_frames.iter()) {
             if let (Some(page), Some(frame)) = (page_opt, frame_opt) {
                 unsafe {
@@ -50,13 +54,14 @@ pub fn init_heap(mapper: &mut impl Mapper<Size4KiB>, frame_allocator: &mut impl 
             }
         }
 
-        // Reset the batch arrays for the next iteration
         batch_pages = Default::default();
         batch_frames = Default::default();
     }
 
     unsafe {
-        ALLOCATOR.lock().init(config::HEAP_START as *mut u8, config::HEAP_SIZE);
+        ALLOCATOR
+            .lock()
+            .init(config::HEAP_START as *mut u8, config::HEAP_SIZE);
     }
 
     Ok(())

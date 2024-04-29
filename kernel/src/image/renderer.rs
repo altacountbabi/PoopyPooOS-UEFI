@@ -1,4 +1,7 @@
-use crate::{framebuffer::{Framebuffer, Position}, image::png::PngData};
+use crate::{
+    framebuffer::{Framebuffer, Position},
+    image::png::PngData,
+};
 
 pub fn render_png(framebuffer: &mut Framebuffer, image: PngData, image_position: Position) {
     let (image_width, image_height) = (image.header.width, image.header.height);
@@ -17,10 +20,14 @@ pub fn render_png(framebuffer: &mut Framebuffer, image: PngData, image_position:
                 continue;
             }
 
-            let pixel_position = Position::new(pixel_x.try_into().unwrap(), pixel_y.try_into().unwrap());
+            let pixel_position =
+                Position::new(pixel_x.try_into().unwrap(), pixel_y.try_into().unwrap());
             let pixel_position2 = Position::new(x.try_into().unwrap(), y.try_into().unwrap());
 
-            framebuffer.draw_pixel(Position::new(pixel_position.x, pixel_position.y), image.pixels[pixel_position2.y * image_width as usize + pixel_position2.x]);
+            framebuffer.draw_pixel(
+                Position::new(pixel_position.x, pixel_position.y),
+                image.pixels[pixel_position2.y * image_width as usize + pixel_position2.x],
+            );
         }
     }
 }

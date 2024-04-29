@@ -1,9 +1,9 @@
 // DOES NOT WORK
 
-use spin::Mutex;
-use core::slice;
 use crate::println;
 use bootloader_api::info::{FrameBuffer, PixelFormat};
+use core::slice;
+use spin::Mutex;
 
 pub struct Buffer<'a> {
     pub width: usize,
@@ -20,12 +20,10 @@ impl<'a> Buffer<'a> {
         let (fb_width, fb_height): (usize, usize) = (fb_info.width, fb_info.height);
         let byte_len = fb_info.width * fb_info.height * fb_info.bytes_per_pixel;
 
-        let pixels = unsafe {
-            slice::from_raw_parts_mut(framebuffer.buffer_mut().as_mut_ptr(), byte_len)
-        };
-        let back_buffer = unsafe {
-            slice::from_raw_parts_mut(framebuffer.buffer_mut().as_mut_ptr(), byte_len)
-        };
+        let pixels =
+            unsafe { slice::from_raw_parts_mut(framebuffer.buffer_mut().as_mut_ptr(), byte_len) };
+        let back_buffer =
+            unsafe { slice::from_raw_parts_mut(framebuffer.buffer_mut().as_mut_ptr(), byte_len) };
 
         println!("{}", byte_len);
 
