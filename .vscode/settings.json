@@ -1,0 +1,25 @@
+{
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "Cargo.lock": true,
+        "kernel/.cargo": true,
+        ".cargo": true,
+        ".vscode": true,
+        "rust-toolchain.toml": true,
+        "target": true,
+        "kernel/src/task/task.rs": true
+    },
+    "hide-files.files": [
+        "Cargo.lock",
+        "kernel/.cargo",
+        ".cargo",
+        ".vscode",
+        "rust-toolchain.toml",
+        "target"
+    ]
+}
