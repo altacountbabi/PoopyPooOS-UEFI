@@ -1,16 +1,19 @@
-use x86_64::{structures::paging::{FrameAllocator, OffsetPageTable, PageTable, PhysFrame, Size4KiB}, PhysAddr, VirtAddr};
 use bootloader_api::info::{MemoryRegionKind, MemoryRegions};
+use x86_64::{
+    structures::paging::{FrameAllocator, OffsetPageTable, PageTable, PhysFrame, Size4KiB},
+    PhysAddr, VirtAddr,
+};
 
 pub struct BootInfoFrameAllocator {
     memory_map: &'static MemoryRegions,
-    next: usize
+    next: usize,
 }
 
 impl BootInfoFrameAllocator {
     pub unsafe fn init(memory_map: &'static MemoryRegions) -> Self {
         BootInfoFrameAllocator {
             memory_map,
-            next: 0
+            next: 0,
         }
     }
 

@@ -8,16 +8,21 @@ use alloc::vec::Vec;
 use bootloader_api::{info::Optional, BootInfo};
 use x86_64::VirtAddr;
 
-use crate::{framebuffer::{Framebuffer, Position}, image::{png::decode_png, renderer::render_png}, memory::memory::BootInfoFrameAllocator, task::{executor::Executor, Task}};
+use crate::{
+    framebuffer::{Framebuffer, Position},
+    image::{png::decode_png, renderer::render_png},
+    memory::memory::BootInfoFrameAllocator,
+    task::{executor::Executor, Task},
+};
 
 mod config;
+mod framebuffer;
 mod gdt;
+mod image;
 mod interrupts;
 mod memory;
 mod serial;
 mod task;
-mod image;
-mod framebuffer;
 
 /*
 fn delay(ms: u32) {
