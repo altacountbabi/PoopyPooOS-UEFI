@@ -8,7 +8,7 @@ use alloc::vec::Vec;
 use bootloader_api::{info::Optional, BootInfo};
 use x86_64::VirtAddr;
 
-use crate::{framebuffer::{Color, Framebuffer, Position}, image::{png::decode_png, renderer::render_png}, memory::memory::BootInfoFrameAllocator, task::{executor::Executor, Task}};
+use crate::{framebuffer::{Framebuffer, Position}, image::{png::decode_png, renderer::render_png}, memory::memory::BootInfoFrameAllocator, task::{executor::Executor, Task}};
 
 mod config;
 mod gdt;
