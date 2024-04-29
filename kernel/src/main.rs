@@ -65,13 +65,6 @@ fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
     let mut frame_allocator = unsafe { BootInfoFrameAllocator::init(&boot_info.memory_regions) };
     println!("Phyisical memory offset: 0x{:x}", phys_mem_offset.as_u64());
 
-    println!(
-        "{}x{}",
-        boot_info.framebuffer.as_ref().unwrap().info().width,
-        boot_info.framebuffer.as_ref().unwrap().info().height
-    );
-    println!("{:#?}", boot_info.framebuffer.as_ref().unwrap().info());
-
     println!("Initializing heap");
     memory::allocator::init_heap(&mut mapper, &mut frame_allocator)
         .expect("Failed to initialize the heap.");
@@ -81,6 +74,13 @@ fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
     let ramdisk = read_ramdisk(ramdisk_addr, ramdisk_len);
 
     let mut fb = Framebuffer::new(boot_info.framebuffer.as_mut().unwrap());
+
+    println!(
+        "Framebuffer resolution is: {}x{}",
+        fb.info().width,
+        fb.info().height
+    );
+
     render_png(&mut fb, decode_png(ramdisk), Position::new(50, 50));
 
     let mut executor = Executor::new();

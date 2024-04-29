@@ -1,13 +1,17 @@
 use crate::{
-    framebuffer::{Framebuffer, Position},
+    framebuffer::{Color, Framebuffer, Position},
     image::png::PngData,
 };
 
 pub fn render_png(framebuffer: &mut Framebuffer, image: PngData, image_position: Position) {
     let (image_width, image_height) = (image.header.width, image.header.height);
 
-    for x in 0..image_width {
-        for y in 0..image_height {
+    for y in 0..image_height {
+        for x in 0..image_width {
+            if image.pixels[(y * image_width as usize as u32 + x) as usize] == Color::new(0, 0, 0) {
+                continue;
+            }
+
             let pixel_x = x + image_position.x as u32;
             let pixel_y = y + image_position.y as u32;
 
