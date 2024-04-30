@@ -8,7 +8,7 @@ pub fn render_png(framebuffer: &mut Framebuffer, image: PngData, image_position:
 
     for y in 0..image_height {
         for x in 0..image_width {
-            if image.pixels[(y * image_width as usize as u32 + x) as usize] == Color::new(0, 0, 0) {
+            if image.pixels[(y * image_width as usize as u32 + x) as usize] == Color::new(0, 0, 0, 0) {
                 continue;
             }
 
