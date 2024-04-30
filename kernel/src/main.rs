@@ -9,7 +9,7 @@ use bootloader_api::{info::Optional, BootInfo};
 use x86_64::VirtAddr;
 
 use crate::{
-    framebuffer::{Framebuffer, Position},
+    framebuffer::{Color, Framebuffer, Position},
     image::{png::decode_png, renderer::render_png},
     memory::memory::BootInfoFrameAllocator,
     task::{executor::Executor, Task},
@@ -81,10 +81,20 @@ fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
         fb.info().height
     );
 
-    render_png(&mut fb, decode_png(ramdisk), Position::new(50, 50));
+    render_png(
+        &mut fb,
+        decode_png(ramdisk),
+        Position::new(50, 50),
+    );
+
+    let offset = Position::new(10, 10);
+    for y in 0 + offset.y .. 200 + offset.y {
+        for x in 0 + offset.x .. 200 + offset.x {
+            fb.draw_pixel(Position::new(x, y), Color::new(170, 0, 0, 50))
+        }
+    }
 
     let mut executor = Executor::new();
-    executor.spawn(Task::new(example_task()));
     executor.run();
 }
 
@@ -92,15 +102,6 @@ fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
 fn panic(info: &core::panic::PanicInfo) -> ! {
     println!("{}", info);
     hlt_loop();
-}
-
-async fn async_number() -> u32 {
-    42
-}
-
-async fn example_task() {
-    let number = async_number().await;
-    println!("async number: {}", number);
 }
 
 fn read_ramdisk(ramdisk_addr: Optional<u64>, ramdisk_len: u64) -> Vec<u8> {
