@@ -9,7 +9,7 @@ use bootloader_api::{info::Optional, BootInfo};
 use x86_64::VirtAddr;
 
 use crate::{
-    framebuffer::{Color, Framebuffer, Position},
+    framebuffer::{Framebuffer, Position},
     image::{png::decode_png, renderer::render_png},
     memory::memory::BootInfoFrameAllocator,
     task::{executor::Executor, Task},
@@ -24,23 +24,6 @@ mod memory;
 mod serial;
 mod task;
 
-/*
-fn delay(ms: u32) {
-    let cycles_per_ms: u32 = 16_000;
-    let iterations = cycles_per_ms * ms;
-
-    for _ in 0..iterations {
-        x86_64::instructions::nop();
-    }
-}
-
-fn delay_cycles(cycles: u32) {
-    for _ in 0..cycles {
-        x86_64::instructions::nop();
-    }
-}
-*/
-
 fn kernel_init() {
     gdt::init();
     interrupts::init();
@@ -52,6 +35,19 @@ fn hlt_loop() -> ! {
     loop {
         x86_64::instructions::hlt();
     }
+}
+
+const CPU_FREQUENCY: u64 = 2_000_000_000;
+
+fn delay_cycles(cycles: u64) {
+    for _ in 0..cycles {
+        x86_64::instructions::nop();
+    }
+}
+
+fn delay_ms(ms: u64) {
+    let cycles_per_ms = CPU_FREQUENCY / 1_000;
+    delay_cycles(ms * cycles_per_ms);
 }
 
 bootloader_api::entry_point!(kernel_main, config = &config::BOOTLOADER_CONFIG);
@@ -73,6 +69,8 @@ fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
     let (ramdisk_len, ramdisk_addr) = (boot_info.ramdisk_len, boot_info.ramdisk_addr);
     let ramdisk = read_ramdisk(ramdisk_addr, ramdisk_len);
 
+    // acpi::init(boot_info.rsdp_addr.into_option().unwrap());
+
     let mut fb = Framebuffer::new(boot_info.framebuffer.as_mut().unwrap());
 
     println!(
@@ -81,20 +79,10 @@ fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
         fb.info().height
     );
 
-    render_png(
-        &mut fb,
-        decode_png(ramdisk),
-        Position::new(50, 50),
-    );
-
-    let offset = Position::new(10, 10);
-    for y in 0 + offset.y .. 200 + offset.y {
-        for x in 0 + offset.x .. 200 + offset.x {
-            fb.draw_pixel(Position::new(x, y), Color::new(170, 0, 0, 50))
-        }
-    }
+    render_png(&mut fb, decode_png(ramdisk), Position::new(50, 50));
 
     let mut executor = Executor::new();
+    executor.spawn(Task::new(async_example(1)));
     executor.run();
 }
 
@@ -102,6 +90,12 @@ fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
 fn panic(info: &core::panic::PanicInfo) -> ! {
     println!("{}", info);
     hlt_loop();
+}
+
+async fn async_example(num: u8) {
+    delay_ms((num * 2) as u64);
+    println!("Waited for {}", (num * 2));
+    println!("{}", num);
 }
 
 fn read_ramdisk(ramdisk_addr: Optional<u64>, ramdisk_len: u64) -> Vec<u8> {
