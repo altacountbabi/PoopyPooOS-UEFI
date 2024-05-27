@@ -80,6 +80,37 @@ impl Framebuffer<'_> {
         }
     }
 
+    #[allow(dead_code)]
+    pub fn draw_pixel_opaque(&mut self, position: Position, color: Color) {
+        let info = self.framebuffer.info();
+
+        let byte_offset = {
+            let line_offset = position.y * info.stride;
+            let pixel_offset = line_offset + position.x;
+            pixel_offset * info.bytes_per_pixel
+        };
+
+        let pixel_buffer = &mut self.framebuffer.buffer_mut()[byte_offset..];
+        match info.pixel_format {
+            PixelFormat::Rgb => {
+                pixel_buffer[0] = color.red;
+                pixel_buffer[1] = color.green;
+                pixel_buffer[2] = color.blue;
+            }
+            PixelFormat::Bgr => {
+                pixel_buffer[0] = color.blue;
+                pixel_buffer[1] = color.green;
+                pixel_buffer[2] = color.red;
+            }
+            PixelFormat::U8 => {
+                let gray = color.red / 3 + color.green / 3 + color.blue / 3;
+
+                pixel_buffer[0] = gray;
+            }
+            other => core::panic!("Unkown pixel format \"{other:?}\""),
+        }
+    }
+
     pub fn get_pixel(&mut self, position: Position) -> Color {
         let info = self.framebuffer.info();
 

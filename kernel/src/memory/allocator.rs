@@ -24,9 +24,8 @@ pub fn init_heap(
     let mut batch_pages: [Option<Page<Size4KiB>>; BATCH_SIZE] = Default::default();
     let mut batch_frames: [Option<PhysFrame>; BATCH_SIZE] = Default::default();
 
-    for page_addr in (heap_start..=heap_end).step_by(Size4KiB::SIZE as usize * BATCH_SIZE as usize)
-    {
-        let batch_end_addr = page_addr + Size4KiB::SIZE as usize * (BATCH_SIZE as usize - 1);
+    for page_addr in (heap_start..=heap_end).step_by(Size4KiB::SIZE as usize * BATCH_SIZE) {
+        let batch_end_addr = page_addr + Size4KiB::SIZE as usize * (BATCH_SIZE - 1);
         let batch_end = heap_end.min(batch_end_addr);
 
         for (i, page) in Page::range_inclusive(
